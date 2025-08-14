@@ -1,3 +1,4 @@
+import os
 import pdfplumber
 import re
 import json
@@ -53,17 +54,19 @@ def validate_toc_vs_spec(toc_data, spec_data):
         "missing_in_spec": list(toc_sections - spec_sections),
         "extra_in_spec": list(spec_sections - toc_sections)
     }
+    # Assumes output folder already exists
     df = pd.DataFrame([report])
     df.to_excel("output/validation_report.xlsx", index=False, engine="openpyxl")
 
 def main():
     pdf_file = find_pdf_in_folder()
     if not pdf_file:
-        print("❌ No PDF file found in the current folder. Please add one and try again.")
+        print("No PDF file found in the current folder. Please add one and try again.")
         return
-
     output_dir = Path("output")
-    output_dir.mkdir(exist_ok=True)
+    if not output_dir.exists():
+        print("'output' folder not found. Please create it manually before running.")
+        return
 
     print(f"📄 Using PDF: {pdf_file}")
     toc_data = extract_toc(pdf_file)
@@ -76,7 +79,7 @@ def main():
     print("Validating...")
     validate_toc_vs_spec(toc_data, spec_data)
 
-    print("\n✅ Parsing complete!")
+    print("\n Parsing complete!")
     print(f"ToC entries: {len(toc_data)}")
     print(f"Files saved in: {output_dir.resolve()}")
 
